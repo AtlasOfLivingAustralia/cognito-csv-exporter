@@ -120,7 +120,7 @@ while pagination_token is not None:
                 continue
             for usr_attr in user['Attributes']:
                 if usr_attr['Name'] == requ_attr:
-                    csv_line[requ_attr] = str(usr_attr['Value'])
+                    csv_line[requ_attr] = str(usr_attr['Value']).replace(',', '\,')
         
         csv_lines.append(",".join(csv_line.values()) + '\n')       
     
