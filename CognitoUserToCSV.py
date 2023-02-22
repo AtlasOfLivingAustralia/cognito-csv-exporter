@@ -5,6 +5,7 @@ import time
 import sys
 import argparse
 from colorama import Fore
+import csv
 
 REGION = ''
 USER_POOL_ID = ''
@@ -16,7 +17,7 @@ PROFILE = ''
 
 """ Parse All Provided Arguments """
 parser = argparse.ArgumentParser(description='Cognito User Pool export records to CSV file', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('-attr', '--export-attributes', nargs='+', type=str, help="List of Attributes to be saved in CSV", required=True)
+parser.add_argument('-attr', '--export-attributes', type=str, help="File name of the AWS Cognito header export", required=True)
 parser.add_argument('--user-pool-id', type=str, help="The user pool ID", required=True)
 parser.add_argument('--region', type=str, default='us-east-1', help="The user pool region")
 parser.add_argument('--profile', type=str, default='', help="The aws profile")
@@ -25,7 +26,16 @@ parser.add_argument('--num-records', type=int, help="Max Number of Cognito Recor
 args = parser.parse_args()
 
 if args.export_attributes:
-    REQUIRED_ATTRIBUTE = list(args.export_attributes)
+    with open(args.export_attributes) as csv_file:
+      csv_reader = csv.reader(csv_file)
+
+      row = next(csv_reader)
+      REQUIRED_ATTRIBUTE = list(row)
+
+    print('list:' + str(REQUIRED_ATTRIBUTE))
+
+    i = REQUIRED_ATTRIBUTE.index('cognito:username')
+    REQUIRED_ATTRIBUTE[i] = 'Username'
 if args.user_pool_id:
     USER_POOL_ID = args.user_pool_id
 if args.region:
