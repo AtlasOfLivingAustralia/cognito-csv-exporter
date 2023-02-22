@@ -12,12 +12,14 @@ LIMIT = 60
 MAX_NUMBER_RECORDS = 0
 REQUIRED_ATTRIBUTE = None
 CSV_FILE_NAME = 'CognitoUsers.csv'
+PROFILE = ''
 
 """ Parse All Provided Arguments """
 parser = argparse.ArgumentParser(description='Cognito User Pool export records to CSV file', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-attr', '--export-attributes', nargs='+', type=str, help="List of Attributes to be saved in CSV", required=True)
 parser.add_argument('--user-pool-id', type=str, help="The user pool ID", required=True)
 parser.add_argument('--region', type=str, default='us-east-1', help="The user pool region")
+parser.add_argument('--profile', type=str, default='', help="The aws profile")
 parser.add_argument('-f', '--file-name', type=str, help="CSV File name")
 parser.add_argument('--num-records', type=int, help="Max Number of Cognito Records to be exported")
 args = parser.parse_args()
@@ -32,6 +34,8 @@ if args.file_name:
     CSV_FILE_NAME = args.file_name
 if args.num_records:
     MAX_NUMBER_RECORDS = args.num_records                 
+if args.profile:
+    PROFILE = args.profile
 # print(1 if "email_verified" in REQUIRED_ATTRIBUTE else 0)
 # sys.exit()
 
@@ -64,10 +68,15 @@ def write_cognito_records_to_file(file_name: str, cognito_records: list) -> bool
         print("Something went wrong while writing to file") 
 """ 
 
-client = boto3.client('cognito-idp', REGION)
+if PROFILE:
+    session = boto3.Session(profile_name=PROFILE)
+    client = session.client('cognito-idp', REGION)
+else:
+    client = boto3.client('cognito-idp', REGION)
+
 csv_new_line = {REQUIRED_ATTRIBUTE[i]: '' for i in range(len(REQUIRED_ATTRIBUTE))}
 try:
-    csv_file = open(CSV_FILE_NAME, 'w')
+    csv_file = open(CSV_FILE_NAME, 'w', encoding="utf-8")
     csv_file.write(",".join(csv_new_line.keys()) + '\n')
 except Exception as err:
     #status = err.response["ResponseMetadata"]["HTTPStatusCode"]
