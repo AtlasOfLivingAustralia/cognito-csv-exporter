@@ -103,8 +103,9 @@ while pagination_token is not None:
         print("Error Reason: " + error_message)
         csv_file.close()
         exit()
-    except:
+    except Exception as err:
         print(Fore.RED + "Something else went wrong")
+        print(err)
         csv_file.close()
         exit()     
 
