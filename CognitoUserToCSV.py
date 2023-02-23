@@ -32,8 +32,8 @@ if args.export_attributes:
       row = next(csv_reader)
       REQUIRED_ATTRIBUTE = list(row)
 
-    print('list:' + str(REQUIRED_ATTRIBUTE))
-
+    # the header exports cognito:username but it needs to be
+    # called "Username" here
     i = REQUIRED_ATTRIBUTE.index('cognito:username')
     REQUIRED_ATTRIBUTE[i] = 'Username'
 if args.user_pool_id:
@@ -139,6 +139,9 @@ while pagination_token is not None:
                 csv_line[requ_attr] = str(user[requ_attr])
                 continue
             for usr_attr in user['Attributes']:
+                # phone number verified and mfa_enabled need explicit values for the import to work
+                if ( usr_attr['Name'] == 'phone_number_verified' or usr_attr['Name'] == 'cognito:mfa_enabled' ) and not usr_attr['Value']:
+                    usr_attr['Value'] = 'False'
                 if usr_attr['Name'] == requ_attr:
                     csv_line[requ_attr] = str(usr_attr['Value']).replace(',', '\,')
         
