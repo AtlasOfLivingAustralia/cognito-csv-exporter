@@ -28,14 +28,8 @@ args = parser.parse_args()
 if args.export_attributes:
     with open(args.export_attributes) as csv_file:
       csv_reader = csv.reader(csv_file)
-
       row = next(csv_reader)
       REQUIRED_ATTRIBUTE = list(row)
-
-    # the header exports cognito:username but it needs to be
-    # called "Username" here
-    i = REQUIRED_ATTRIBUTE.index('cognito:username')
-    REQUIRED_ATTRIBUTE[i] = 'Username'
 if args.user_pool_id:
     USER_POOL_ID = args.user_pool_id
 if args.region:
@@ -85,9 +79,20 @@ else:
     client = boto3.client('cognito-idp', REGION)
 
 csv_new_line = {REQUIRED_ATTRIBUTE[i]: '' for i in range(len(REQUIRED_ATTRIBUTE))}
+
+# so dodgey, the username attr must be cognito:username in the header
+# but Username for retrival
+i = REQUIRED_ATTRIBUTE.index('cognito:username')
+REQUIRED_ATTRIBUTE[i] = 'Username'
+
 try:
     csv_file = open(CSV_FILE_NAME, 'w', encoding="utf-8")
     csv_file.write(",".join(csv_new_line.keys()) + '\n')
+    
+    # make sure it's Username here too, had to be done after the header is printed
+    csv_new_line.pop('cognito:username')
+    csv_new_line['Username'] = ''
+   
 except Exception as err:
     #status = err.response["ResponseMetadata"]["HTTPStatusCode"]
     error_message = repr(err)#err.strerror
