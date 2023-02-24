@@ -140,13 +140,18 @@ while pagination_token is not None:
         csv_line = csv_new_line.copy()
         for requ_attr in REQUIRED_ATTRIBUTE:
             csv_line[requ_attr] = ''
+            # phone number verified and mfa_enabled need explicit values for the import to work
+            if ( requ_attr == 'phone_number_verified' or requ_attr == 'cognito:mfa_enabled' ) and not requ_attr in user:
+                csv_line[requ_attr] = 'False'
             if requ_attr in user.keys():
                 csv_line[requ_attr] = str(user[requ_attr])
                 continue
+            # the import requires at least one of phone or email to be verified 
+            # since we dont have phone, email it is! Maybe we dont want to import
+            # unverified users? people that come in via social login are marked
+            # as unverified
+            csv_line['email_verified'] = 'True'
             for usr_attr in user['Attributes']:
-                # phone number verified and mfa_enabled need explicit values for the import to work
-                if ( usr_attr['Name'] == 'phone_number_verified' or usr_attr['Name'] == 'cognito:mfa_enabled' ) and not usr_attr['Value']:
-                    usr_attr['Value'] = 'False'
                 if usr_attr['Name'] == requ_attr:
                     csv_line[requ_attr] = str(usr_attr['Value']).replace(',', '\,')
         
