@@ -148,8 +148,7 @@ while pagination_token is not None:
                 continue
             # the import requires at least one of phone or email to be verified 
             # since we dont have phone, email it is! Maybe we dont want to import
-            # unverified users? people that come in via social login are marked
-            # as unverified
+            # unverified users?
             csv_line['email_verified'] = 'True'
             for usr_attr in user['Attributes']:
                 if usr_attr['Name'] == requ_attr:
