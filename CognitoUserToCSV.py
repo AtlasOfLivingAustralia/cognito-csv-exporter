@@ -17,7 +17,6 @@ PROFILE = ''
 
 """ Parse All Provided Arguments """
 parser = argparse.ArgumentParser(description='Cognito User Pool export records to CSV file', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('-attr', '--export-attributes', type=str, help="File name of the AWS Cognito header export", required=True)
 parser.add_argument('--user-pool-id', type=str, help="The user pool ID", required=True)
 parser.add_argument('--region', type=str, default='us-east-1', help="The user pool region")
 parser.add_argument('--profile', type=str, default='', help="The aws profile")
@@ -25,11 +24,6 @@ parser.add_argument('-f', '--file-name', type=str, help="CSV File name")
 parser.add_argument('--num-records', type=int, help="Max Number of Cognito Records to be exported")
 args = parser.parse_args()
 
-if args.export_attributes:
-    with open(args.export_attributes) as csv_file:
-      csv_reader = csv.reader(csv_file)
-      row = next(csv_reader)
-      REQUIRED_ATTRIBUTE = list(row)
 if args.user_pool_id:
     USER_POOL_ID = args.user_pool_id
 if args.region:
@@ -47,7 +41,7 @@ def datetimeconverter(o):
     if isinstance(o, datetime.datetime):
         return str(o)
 
-def get_list_cognito_users(cognito_idp_cliend, next_pagination_token ='', Limit = LIMIT):  
+def get_list_cognito_users(cognito_idp_client, next_pagination_token ='', Limit = LIMIT):  
 
     return client.list_users(
         UserPoolId = USER_POOL_ID,
@@ -78,6 +72,10 @@ if PROFILE:
 else:
     client = boto3.client('cognito-idp', REGION)
 
+# get all attributes from cognito user pool
+response = client.get_csv_header( UserPoolId = USER_POOL_ID )
+REQUIRED_ATTRIBUTE = response['CSVHeader']
+
 csv_new_line = {REQUIRED_ATTRIBUTE[i]: '' for i in range(len(REQUIRED_ATTRIBUTE))}
 
 # so dodgey, the username attr must be cognito:username in the header
@@ -107,7 +105,7 @@ while pagination_token is not None:
     csv_lines = []
     try:
         user_records = get_list_cognito_users(
-            cognito_idp_cliend = client,
+            cognito_idp_client = client,
             next_pagination_token = pagination_token,
             Limit = LIMIT if LIMIT < MAX_NUMBER_RECORDS else MAX_NUMBER_RECORDS
         )
@@ -127,7 +125,7 @@ while pagination_token is not None:
     # json_formatted_str = json.dumps(user_records, indent=4, default=datetimeconverter)
     # print(json_formatted_str)
 
-    """ Check if there next paginatioon is exist """
+    """ Check if there next pagination is exist """
     if set(["PaginationToken","NextToken"]).intersection(set(user_records)):
         pagination_token = user_records['PaginationToken'] if "PaginationToken" in user_records else user_records['NextToken']
     else:
@@ -158,7 +156,7 @@ while pagination_token is not None:
     
     csv_file.writelines(csv_lines)
 
-    """ Display Proccess Infor """
+    """ Display Process Info """
     pagination_counter += 1
     exported_records_counter += len(csv_lines)
     print(Fore.YELLOW + "Page: #{} \n Total Exported Records: #{} \n".format(str(pagination_counter), str(exported_records_counter)))
