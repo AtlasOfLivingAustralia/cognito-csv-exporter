@@ -2,7 +2,7 @@
 
 This project exports user records from an [Amazon Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) to a CSV file that is suitable for [import into another User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-using-import-tool.html).
 
-It also exports the Groups and users memberships
+It also exports the Groups and users memberships and can import them into another user pool
 
 ## Run the user export
 
@@ -29,3 +29,12 @@ To start the export process:
 - `--user-pool-id` [__Required__] - The user pool ID for the user pool on which the export should be performed
 - `--region` [_Optional_] - The user pool region the user pool on which the export should be performed _Default_: `us-east-1`
 - `--profile` [_Optional_] - The AWS IAM profile _Default_: `none`
+
+## Run the group import
+
+- `python ./import_groups.py --user-pool-id  ap-southeast-2_XXXXXXXXX --group-export-file ./groups.json`
+
+### Script Arguments
+
+- `--user-pool-id` [__Required__] - The user pool ID for the user pool on which the export should be performed
+- `--group-export-file` [__Required__] - The group export file created by `export_groups.py`
