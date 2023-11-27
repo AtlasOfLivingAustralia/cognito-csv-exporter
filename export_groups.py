@@ -10,31 +10,18 @@ import argparse
 # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cognito-idp/client/list_users_in_group.html
 
 
-REGION = ''
 USER_POOL_ID = ''
 LIMIT = 60
-PROFILE = ''
 
 """ Parse All Provided Arguments """
 parser = argparse.ArgumentParser(description='Cognito User Pool export groups', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--user-pool-id', type=str, help="The user pool ID", required=True)
-parser.add_argument('--region', type=str, default='us-east-1', help="The user pool region")
-parser.add_argument('--profile', type=str, default='', help="The aws profile")
 args = parser.parse_args()
 
 if args.user_pool_id:
     USER_POOL_ID = args.user_pool_id
-if args.region:
-    REGION = args.region
-if args.profile:
-    PROFILE = args.profile
 
-if PROFILE:
-    session = boto3.Session(profile_name=PROFILE)
-    client = session.client('cognito-idp', REGION)
-else:
-    client = boto3.client('cognito-idp', REGION)
-
+client = boto3.client('cognito-idp')
 
 ###
 # Get all the users in a group, handles pagination
@@ -68,19 +55,33 @@ def get_users_in_group(cognito_idp_client, group_name, next_pagination_token =''
 
    return users
 
-# get all groups
-try:
-  # not handling pagination here, not expecting more than a few groups
-  response = client.list_groups( UserPoolId = USER_POOL_ID, Limit = LIMIT )
-except Exception as err:
-    print("Something went wrong")
-    print(err)
-    sys.exit()     
+##
+# Function to list all groups with pagination
+def get_all_groups(user_pool_id, limit):
+    pagination_token = None
+    all_groups = []
+
+    while True:
+        print('makeing req')
+        if pagination_token:
+            response = client.list_groups(UserPoolId = USER_POOL_ID, Limit = LIMIT, NextToken = pagination_token)
+        else:
+            response = client.list_groups(UserPoolId = USER_POOL_ID, Limit = LIMIT)
+
+        all_groups.extend(response.get('Groups', []))
+
+        pagination_token = response.get('NextToken')
+        if not pagination_token:
+            break
+
+    return all_groups
+
+all_groups = get_all_groups(USER_POOL_ID, LIMIT )
 
 # get the users for each group
-for group in response['Groups']:
+for group in all_groups:
   users = get_users_in_group(client, group['GroupName']) 
   group['Users'] = users
 
-print(json.dumps(response, indent=4, default=str))
+print(json.dumps(all_groups, indent=4, default=str))
 
