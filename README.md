@@ -36,5 +36,5 @@ To start the export process:
 
 ### Script Arguments
 
-- `--user-pool-id` [__Required__] - The user pool ID for the user pool on which the export should be performed
+- `--user-pool-id` [__Required__] - The user pool ID for the user pool to import the groups to
 - `--group-export-file` [__Required__] - The group export file created by `export_groups.py`
