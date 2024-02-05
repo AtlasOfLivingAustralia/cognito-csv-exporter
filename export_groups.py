@@ -15,13 +15,14 @@ LIMIT = 60
 
 """ Parse All Provided Arguments """
 parser = argparse.ArgumentParser(description='Cognito User Pool export groups', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--user-pool-id', type=str, help="The user pool ID", required=True)
+parser.add_argument('--user-pool-id', type=str, help='The user pool ID', required=True)
+parser.add_argument('--region', type=str, default='ap-southeast-2', help='The user pool region')
 args = parser.parse_args()
 
-if args.user_pool_id:
-    USER_POOL_ID = args.user_pool_id
+USER_POOL_ID = args.user_pool_id
+REGION = args.region
 
-client = boto3.client('cognito-idp')
+client = boto3.client('cognito-idp', REGION)
 
 ###
 # Get all the users in a group, handles pagination
@@ -62,7 +63,6 @@ def get_all_groups(user_pool_id, limit):
     all_groups = []
 
     while True:
-        print('makeing req')
         if pagination_token:
             response = client.list_groups(UserPoolId = USER_POOL_ID, Limit = LIMIT, NextToken = pagination_token)
         else:
